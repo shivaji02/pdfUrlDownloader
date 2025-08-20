@@ -1,0 +1,12 @@
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/observer/DownloadObserver.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/resolver/FileNameResolver.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/utils/StringUtils.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/utils/ChapterAbbreviations.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/core/DownloadManager.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/observer/ConsoleLogger.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/model/DownloadTask.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/resolver/AttemptContextResolver.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/core/PDFDownloader.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/Main.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/resolver/CleanAnchorResolver.java
+/Users/neosoft/Downloads/PDFdownloader/src/main/java/org/pdf/downloader/CleanAnchorResolver.java
