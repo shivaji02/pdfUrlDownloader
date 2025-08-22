@@ -126,8 +126,3 @@ flowchart TD
 
 ---
 
-## 🏁 **Summary**
-
-This project is designed for **easy learning and modification**.  
-Every class has a clear responsibility, and the flow is logical and well-documented.  
-You can confidently make changes, add features, or adapt it
