@@ -81,4 +81,33 @@ public class ChapterAbbreviations {
         // Check common terms
         return COMMON_TERMS.get(text);
     }
+    
+    public static String smartAbbreviation(String text, String subject) {
+        // Try static map first
+        String staticAbbrev = getAbbreviation(text, subject);
+        if (staticAbbrev != null) return staticAbbrev;
+
+        // Remove stopwords
+        String[] stopwords = {"the", "and", "of", "in", "on", "for", "to", "with", "by"};
+        String[] words = text.toLowerCase().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+
+        for (String word : words) {
+            boolean isStopword = false;
+            for (String stop : stopwords) {
+                if (word.equals(stop)) {
+                    isStopword = true;
+                    break;
+                }
+            }
+            if (!isStopword && !word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)));
+            }
+        }
+        String initials = sb.toString();
+        if (initials.length() >= 2) return initials;
+
+        // Fallback: first 4 letters
+        return text.length() > 4 ? text.substring(0, 4) : text;
+    }
 }

@@ -15,9 +15,9 @@ import java.util.Map;
 public class MasterPdfGenerator {
     
     public String generateMasterPdf(String downloadDir, 
-                                  Map<String, String> fileMappings, 
-                                  String sourceUrl,
-                                  EnhancedDownloadManager.DownloadResult result) {
+            Map<String, String> fileMappings, 
+                        String sourceUrl,
+                        EnhancedDownloadManager.DownloadResult result) {
         
         // Path masterPath = Paths.get(downloadDir, "Master.pdf");
         
@@ -48,7 +48,7 @@ public class MasterPdfGenerator {
                                        EnhancedDownloadManager.DownloadResult result) {
         
         StringBuilder content = new StringBuilder();
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         
         // Header
         content.append("=" .repeat(80)).append("\n");
