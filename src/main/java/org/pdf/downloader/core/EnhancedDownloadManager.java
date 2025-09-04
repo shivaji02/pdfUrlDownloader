@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class EnhancedDownloadManager {
     private final MultiThreadedPDFDownloader downloader;
@@ -60,29 +62,60 @@ public class EnhancedDownloadManager {
             
         Elements links = doc.select("a[href]");
         
-        // Prepare download tasks
-        List<DownloadTask> tasks = prepareTasks(links, doc, downloadDir);
+        // Prepare download tasks (includes one-level crawl for nested PDF lists)
+        List<DownloadTask> tasks = prepareTasks(url, links, doc, downloadDir);
         observer.onTasksIdentified(tasks.size());
         
         // Execute downloads concurrently
         return executeDownloads(tasks);
     }
 
-    private List<DownloadTask> prepareTasks(Elements links, Document doc, String downloadDir) {
+    private List<DownloadTask> prepareTasks(String baseUrl, Elements links, Document doc, String downloadDir) {
         String context = contextResolver.resolveContext(doc);
         Set<String> seenUrls = new HashSet<>();
         List<DownloadTask> tasks = new ArrayList<>();
-        
+
+        // 1) Collect PDFs from the base page
+        collectPdfTasksFromLinks(links, context, downloadDir, seenUrls, tasks);
+
+        // 2) One-step crawl: follow non-PDF links within same host, collect PDFs from those pages
+        String baseHost = getHostSafe(baseUrl);
+        Set<String> visitedPages = new HashSet<>();
         for (Element link : links) {
             String href = link.absUrl("href");
-            if (isPdfLink(href) && !seenUrls.contains(href)) {
-                seenUrls.add(href);
+            if (href == null || href.isEmpty()) continue;
+            if (isPdfLink(href)) continue; // PDFs already handled
+            if (!isHttp(href)) continue;
+            String host = getHostSafe(href);
+            if (!Objects.equals(baseHost, host)) continue; // stay on same site
+            if (!visitedPages.add(normalizeUrl(href))) continue; // already visited
+
+            try {
+                Document child = Jsoup.connect(href)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .timeout(15000)
+                    .get();
+                Elements childLinks = child.select("a[href]");
+                String childContext = contextResolver.resolveContext(child);
+                collectPdfTasksFromLinks(childLinks, childContext, downloadDir, seenUrls, tasks);
+            } catch (IOException e) {
+                // Log but continue; child pages are optional
+                observer.onError("Failed to crawl: " + href + " - " + e.getMessage());
+            }
+        }
+
+        return tasks;
+    }
+
+    private void collectPdfTasksFromLinks(Elements links, String context, String downloadDir,
+                                          Set<String> seenUrls, List<DownloadTask> tasks) {
+        for (Element link : links) {
+            String href = link.absUrl("href");
+            if (isPdfLink(href) && seenUrls.add(normalizeUrl(href))) {
                 String fileName = nameResolver.resolveFileName(link, context);
                 tasks.add(new DownloadTask(href, fileName, downloadDir));
             }
         }
-        
-        return tasks;
     }
 
     private DownloadResult executeDownloads(List<DownloadTask> tasks) {
@@ -145,6 +178,27 @@ public class EnhancedDownloadManager {
 
     private boolean isPdfLink(String url) {
         return url.toLowerCase().endsWith(".pdf");
+    }
+
+    private boolean isHttp(String url) {
+        String u = url.toLowerCase();
+        return u.startsWith("http://") || u.startsWith("https://");
+    }
+
+    private String getHostSafe(String url) {
+        try {
+            return new URL(url).getHost();
+        } catch (MalformedURLException e) {
+            return "";
+        }
+    }
+
+    private String normalizeUrl(String url) {
+        // Basic normalization to avoid trivial duplicates
+        if (url == null) return "";
+        String u = url.trim();
+        if (u.endsWith("/")) u = u.substring(0, u.length() - 1);
+        return u;
     }
 
     /**

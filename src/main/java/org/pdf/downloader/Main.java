@@ -14,26 +14,26 @@ public class Main {
         // Initialize memory monitoring
         MemoryMonitor.resetTimer();
         MemoryMonitor.logMemoryUsage("Application startup");
-
+        
         System.out.println("🚀 Starting Enhanced ICAI PDF Downloader...");
-
+        
         // Configuration
-        String baseUrl = "https://www.icai.org/post/sm-final-p1-may2025";
-        String downloadDir = System.getProperty("user.home") + "/Documents/CA-F/DUMMY-2/";
-
+        String baseUrl = "https://boslive.icai.org/sm_chapter_details.php?p_id=100&m_id=136";
+        String downloadDir = System.getProperty("user.home") + "/Documents/CA-F/AFM/";
+        
         // Create and execute
         CleanAnchorResolver resolver = new CleanAnchorResolver();
         EnhancedDownloadManager manager = new EnhancedDownloadManager(
-                resolver,
-                new AttemptContextResolver(),
-                new ConsoleLogger(),
-                4
+            resolver,
+            new AttemptContextResolver(), 
+            new ConsoleLogger(),
+            4
         );
-
+        
         ThreadManagerWrapper threadWrapper = new ThreadManagerWrapper(manager);
         NetworkRetryWrapper networkWrapper = new NetworkRetryWrapper(threadWrapper);
         ErrorHandlerWrapper errorWrapper = new ErrorHandlerWrapper(networkWrapper);
-
+        
         try {
             errorWrapper.executeDownload(baseUrl, downloadDir);
         } finally {

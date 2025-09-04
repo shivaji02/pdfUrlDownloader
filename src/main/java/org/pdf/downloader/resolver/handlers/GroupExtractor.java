@@ -43,26 +43,37 @@ public class GroupExtractor {
     }
     
     private String extractSubject(String paper, String text, String href) {
+        // CA Final Papers mapping (New Scheme):
+        // P1: FR, P2: AFM, P3: AUD, P4: DT, P5: IDT, P6: MCD
         if (!paper.isEmpty()) {
             switch (paper) {
                 case "P1": return "FR";
                 case "P2": return "AFM";
                 case "P3": return "AUD";
-                case "P4": return "LAW";
-                case "P5": return "COST";
-                case "P6": return "SBM";
+                case "P4": return "DT";
+                case "P5": return "IDT";
+                case "P6": return "MCD";
             }
         }
-        
+
         String url = href.toLowerCase();
-        
-        if (url.contains("audit") || text.contains("audit")) return "AUD";
-        if (url.contains("fr") || text.contains("financial reporting")) return "FR";
-        if (url.contains("afm") || text.contains("advanced financial")) return "AFM";
-        if (url.contains("law") || text.contains("corporate law")) return "LAW";
-        if (url.contains("cost") || text.contains("cost management")) return "COST";
-        if (url.contains("sbm") || text.contains("business management")) return "SBM";
-        
+        String lowerText = text.toLowerCase();
+
+        // Keyword-based subject detection for CA Final
+        if (url.contains("financial reporting") || lowerText.contains("financial reporting") || url.matches(".*\\bfr\\b.*") || lowerText.matches(".*\\bfr\\b.*")) return "FR";
+        if (url.contains("afm") || lowerText.contains("advanced financial") || lowerText.contains("advanced financial management")) return "AFM";
+        // Audit synonyms (legacy/new names): AAAPE/AAPE/Advanced Auditing and Professional Ethics
+        if (url.contains("audit") || lowerText.contains("audit") ||
+            url.contains("aaape") || lowerText.contains("aaape") ||
+            url.contains("aape") || lowerText.contains("aape") ||
+            lowerText.contains("advanced auditing") || lowerText.contains("professional ethics")) {
+            return "AUD";
+        }
+        if (url.contains("direct tax") || lowerText.contains("direct tax") || url.matches(".*\\bdt\\b.*") || lowerText.matches(".*\\bdt\\b.*") || lowerText.contains("income tax")) return "DT";
+        if (url.contains("gst") || lowerText.contains("gst") || url.contains("indirect tax") || lowerText.contains("indirect tax") || url.matches(".*\\bidt\\b.*") || lowerText.matches(".*\\bidt\\b.*")) return "IDT";
+        if (lowerText.contains("multi") && lowerText.contains("disciplinary") && lowerText.contains("case") || url.contains("mcs") || url.contains("mcd") || lowerText.contains("mcs") || lowerText.contains("mcd")) return "MCD";
+
+        // Remove inter-only subjects: LAW/COST/SBM
         return "";
     }
     

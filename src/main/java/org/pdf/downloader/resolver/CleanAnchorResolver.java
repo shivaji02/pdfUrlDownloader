@@ -47,9 +47,18 @@ public class CleanAnchorResolver implements FileNameResolver {
         String finalFileName = "";
         
         try {
-            // 1. Try chapter-specific handling first
+            // Build combined text once
+            String combinedText = (linkText + " " + context + " " + href).toLowerCase();
+
+            // 1. Try chapter-specific handling first (prefix with subject if detected)
             String chapterFileName = chapterHandler.handleChapterContent(linkText, href);
             if (!chapterFileName.isEmpty()) {
+                GroupExtractor.GroupInfo chGroup = groupExtractor.extractGroup(combinedText, href);
+                if (chGroup != null && chGroup.getSubject() != null && !chGroup.getSubject().isEmpty()) {
+                    String subjectPrefix = chGroup.getSubject().toUpperCase();
+                    // keep it compact: FRUnit1.pdf, AFMModule2.pdf, etc.
+                    chapterFileName = subjectPrefix + chapterFileName;
+                }
                 finalFileName = tracker.handleDuplicates(chapterFileName);
                 tracker.trackMapping(finalFileName, linkText);
                 System.out.println("✅ Generated: " + finalFileName);
@@ -57,7 +66,6 @@ public class CleanAnchorResolver implements FileNameResolver {
             }
             
             // 2. Handle other content types
-            String combinedText = (linkText + " " + context + " " + href).toLowerCase();
             
             // Extract information
             DateExtractor.DateInfo dateInfo = dateExtractor.extractDate(combinedText);
