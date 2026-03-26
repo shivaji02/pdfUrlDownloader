@@ -24,15 +24,26 @@ public class EnhancedDownloadManager {
     private final DownloadObserver observer;
     private final ExecutorService executorService;
     private final int maxConcurrentDownloads;
+    /** When true, follows same-host non-PDF links once and downloads PDFs found on those pages (can pull in nav/footer PDFs from the whole site). */
+    private final boolean followNestedPages;
 
-    public EnhancedDownloadManager(FileNameResolver nameResolver, 
-                                 AttemptContextResolver contextResolver, 
+    public EnhancedDownloadManager(FileNameResolver nameResolver,
+                                 AttemptContextResolver contextResolver,
                                  DownloadObserver observer,
                                  int maxConcurrentDownloads) {
+        this(nameResolver, contextResolver, observer, maxConcurrentDownloads, false);
+    }
+
+    public EnhancedDownloadManager(FileNameResolver nameResolver,
+                                 AttemptContextResolver contextResolver,
+                                 DownloadObserver observer,
+                                 int maxConcurrentDownloads,
+                                 boolean followNestedPages) {
         this.nameResolver = nameResolver;
         this.contextResolver = contextResolver;
         this.observer = observer;
         this.maxConcurrentDownloads = maxConcurrentDownloads;
+        this.followNestedPages = followNestedPages;
         this.executorService = Executors.newFixedThreadPool(maxConcurrentDownloads);
         this.downloader = new MultiThreadedPDFDownloader();
     }
@@ -61,8 +72,12 @@ public class EnhancedDownloadManager {
             .get();
             
         Elements links = doc.select("a[href]");
-        
-        // Prepare download tasks (includes one-level crawl for nested PDF lists)
+
+        if (!followNestedPages) {
+            observer.onStart("PDF discovery: this page only (nested same-host crawl disabled).");
+        }
+
+        // Prepare download tasks (optional one-level crawl for nested PDF lists)
         List<DownloadTask> tasks = prepareTasks(url, links, doc, downloadDir);
         observer.onTasksIdentified(tasks.size());
         
@@ -78,7 +93,11 @@ public class EnhancedDownloadManager {
         // 1) Collect PDFs from the base page
         collectPdfTasksFromLinks(links, context, downloadDir, seenUrls, tasks);
 
-        // 2) One-step crawl: follow non-PDF links within same host, collect PDFs from those pages
+        // 2) Optional: one-step crawl of same-host non-PDF links (adds PDFs from many nav/menu pages)
+        if (!followNestedPages) {
+            return tasks;
+        }
+
         String baseHost = getHostSafe(baseUrl);
         Set<String> visitedPages = new HashSet<>();
         for (Element link : links) {

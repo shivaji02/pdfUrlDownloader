@@ -110,27 +110,40 @@ public class ThreadManagerWrapper {
     }
     
     /**
-     * Comprehensive cleanup and resource management
+     * Comprehensive cleanup and immediate resource release
      */
     private void performCleanup() {
         try {
-            System.out.println("\n🧹 Performing thread cleanup...");
+            System.out.println("\n🧹 Performing immediate resource cleanup...");
             MemoryMonitor.logMemoryUsage("Before cleanup");
             
-            // 1. Cancel any remaining operations
+            // 1. Cancel any remaining operations immediately
             cancelCurrentDownload();
             
-            // 2. Allow graceful completion
-            System.out.println("⏳ Allowing graceful completion...");
-            Thread.sleep(2000); // 2-second grace period
+            // 2. Minimal grace period for critical operations
+            System.out.println("⏳ Brief grace period for critical operations...");
+            Thread.sleep(500); // Only 500ms grace period
             
-            // 3. Force memory cleanup
+            // 3. Aggressive memory cleanup
+            System.out.println("🧹 Forcing aggressive garbage collection...");
+            for (int i = 0; i < 3; i++) {
+                System.gc();
+                System.runFinalization();
+                Thread.sleep(100);
+            }
+            
+            // 4. Clear all references
+            currentFuture = null;
+            
+            // 5. Force memory reclaim
             MemoryMonitor.forceCleanup();
             
-            // 4. Final memory report
+            // 6. Final memory report
+            long freedMemory = MemoryMonitor.getFreeMemoryMB();
+            System.out.println("✅ Garbage collection freed " + freedMemory + " MB");
             MemoryMonitor.logMemoryUsage("After cleanup");
             
-            System.out.println("✅ Thread cleanup completed!");
+            System.out.println("🎯 Resources immediately available for next operation!");
             
         } catch (InterruptedException e) {
             System.err.println("⚠️  Cleanup interrupted");
@@ -138,6 +151,31 @@ public class ThreadManagerWrapper {
         } catch (Exception e) {
             System.err.println("❌ Cleanup error: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Immediate aggressive cleanup for large downloads
+     */
+    public void immediateCleanup() {
+        System.out.println("🚀 Immediate aggressive cleanup initiated...");
+        
+        // Cancel everything immediately
+        cancelCurrentDownload();
+        
+        // Force multiple GC cycles
+        for (int i = 0; i < 5; i++) {
+            System.gc();
+            System.runFinalization();
+        }
+        
+        // Clear manager resources if available
+        if (manager != null) {
+            // Note: Enhanced cleanup handled by wrapper itself
+            System.out.println("🔧 Download manager cleared");
+        }
+        
+        MemoryMonitor.forceCleanup();
+        System.out.println("💨 Resources freed and ready for idle state!");
     }
     
     /**

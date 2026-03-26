@@ -53,6 +53,23 @@ public class MemoryMonitor {
         }
     }
     
+    public static long getFreeMemoryMB() {
+        Runtime runtime = Runtime.getRuntime();
+        long beforeGC = runtime.totalMemory() - runtime.freeMemory();
+        
+        System.gc();
+        System.runFinalization();
+        
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        long afterGC = runtime.totalMemory() - runtime.freeMemory();
+        return (beforeGC - afterGC) / (1024 * 1024);
+    }
+    
     public static void resetTimer() {
         startTime = System.currentTimeMillis();
     }
